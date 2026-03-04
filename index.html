@@ -285,11 +285,8 @@
                 currentUser = user;
                 document.getElementById('login-page').style.display = 'none';
                 document.getElementById('user-info').style.display = 'flex';
-                
-                // Correção da Imagem de Perfil
                 const photo = user.photoURL ? user.photoURL : "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName);
                 document.getElementById('user-photo').src = photo;
-                
                 document.getElementById('user-name').innerText = user.displayName;
                 startListening();
             } else {
@@ -299,10 +296,20 @@
             }
         });
 
+        // ALTERADO PARA REDIRECT
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
+            auth.signInWithRedirect(provider);
         }
+
+        // CAPTURAR RESULTADO DO REDIRECT
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                console.log("Logado com sucesso via redirect.");
+            }
+        }).catch((error) => {
+            console.error("Erro no login por redirecionamento:", error.message);
+        });
 
         function logout() { auth.signOut(); }
 
