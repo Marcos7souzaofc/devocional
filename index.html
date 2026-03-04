@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DevocionalFlow</title>
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #f1f5f9; --bg-card: #ffffff; --bg-input: #f8fafc;
+            --text-main: #1e293b; --text-dim: #64748b; --accent: #2563eb;
+            --border: #e2e8f0; --nav-bg: rgba(255, 255, 255, 0.95);
+            --checklist-selected: #bbf7d0;
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #151f32;
+            --text-main: #f8fafc; --text-dim: #94a3b8; --accent: #3b82f6; 
+            --border: #334155; --nav-bg: rgba(30, 41, 59, 0.95);
+            --checklist-selected: #065f46;
+        }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; transition: background 0.2s; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-body); color: var(--text-main); margin: 0; padding-bottom: 100px; -webkit-font-smoothing: antialiased; }
+        
+        /* TELA DE LOGIN */
+        #login-page { position: fixed; inset: 0; background: var(--bg-body); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: var(--bg-card); padding: 40px 25px; border-radius: 24px; border: 1px solid var(--border); width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .btn-google { background: #fff; color: #444; border: 1px solid var(--border); padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        /* STATUS OFFLINE */
+        #offline-status { display: none; background: #f59e0b; color: white; text-align: center; font-size: 0.7rem; font-weight: 800; padding: 5px; position: sticky; top: 0; z-index: 10001; }
+
+        .header { padding: 25px 25px 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-area h1 { margin: 0; font-size: 1.8rem; letter-spacing: -1.2px; font-weight: 800; }
+        .slogan { color: var(--accent); font-size: 0.85rem; font-weight: 600; opacity: 0.9; display: block; margin-top: 2px; }
+        .theme-toggle { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 12px; cursor: pointer; margin-top: 5px; }
+        
+        .page { display: none; padding: 0 25px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-label { color: var(--accent); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; letter-spacing: 1.2px; margin-top: 20px; }
+        .editor-block { background: var(--bg-card); padding: 18px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .stat-card { text-align: center; cursor: pointer; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        
+        input, textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 10px; outline: none; font-size: 0.95rem; }
+        textarea { resize: none; line-height: 1.5; }
+        
+        .btn-main { background: var(--accent); color: #ffffff; border: none; padding: 18px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-outline { background: transparent; border: 1px dashed var(--accent); color: var(--accent); padding: 12px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 700; font-size: 0.8rem; margin-bottom: 10px; }
+        
+        .topic-item { position: relative; padding: 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-input); margin-bottom: 12px; }
+        .topic-number-badge { font-size: 0.65rem; font-weight: 800; color: var(--accent); display: block; margin-bottom: 5px; text-transform: uppercase; }
+        .btn-remove-topic { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; z-index: 5; }
+        .subtopic-container { margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px; }
+        .subtopic-item { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .btn-remove-subtopic { background: #ef4444; color: white; border: none; width: 20px; height: 20px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; flex-shrink: 0; }
+        .btn-add-sub { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 6px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 0.7rem; font-weight: 600; margin-top: 5px; }
+
+        .checklist-container { display: flex; flex-direction: column; gap: 12px; }
+        .checklist-item { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 10px; border-radius: 10px; transition: 0.2s; }
+        .checklist-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: #16a34a; cursor: pointer; }
+        .checklist-item:has(input:checked) { background-color: var(--checklist-selected); }
+        
+        .viewer-checklist-item { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; padding: 4px 0; background: transparent !important; }
+
+        #reader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 2000; overflow-y: auto; padding: 80px 25px 80px; display: none; }
+        #reader.active { display: block; }
+        
+        .reader-back-btn { 
+            position: fixed; top: 20px; left: 20px; z-index: 2200; 
+            background: var(--bg-card); border: 1px solid var(--border); 
+            color: var(--text-main); width: 45px; height: 45px; 
+            border-radius: 50%; display: flex; align-items: center; 
+            justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            opacity: 1; visibility: visible; cursor: pointer;
+        }
+        .reader-back-btn.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .reader-content p { line-height: 1.8; font-size: 1.1rem; margin-bottom: 25px; color: var(--text-main); opacity: 0.95; }
+
+        .navbar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); backdrop-filter: blur(10px); display: flex; padding: 15px 5px; border-top: 1px solid var(--border); z-index: 1000; justify-content: space-around; }
+        .nav-item { color: var(--text-dim); text-align: center; cursor: pointer; background: none; border: none; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 1.4rem; }
+        .nav-item span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-dim); }
+
+        .search-container { position: sticky; top: 0; background: var(--bg-body); z-index: 100; padding: 10px 0 20px; }
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+        .search-wrapper i { position: absolute; left: 15px; color: var(--text-dim); }
+        .search-wrapper input { padding-left: 45px; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+        .custom-alert { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .custom-alert.active { display: flex; }
+        .alert-box { background: var(--bg-card); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .alert-box i { font-size: 3rem; color: #ef4444; margin-bottom: 15px; }
+        .alert-box h3 { margin: 0 0 10px; font-weight: 800; }
+        .alert-box p { margin-bottom: 20px; color: var(--text-dim); line-height: 1.5; }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div id="login-page">
+        <div class="login-card">
+            <i class="fas fa-feather-pointed" style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"></i>
+            <h2 style="font-weight: 800; margin: 0;">DevocionalFlow</h2>
+            <p style="color: var(--text-dim); margin: 10px 0 0;">Entre para salvar seus momentos com Deus com segurança.</p>
+            <button class="btn-google" onclick="loginGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+                Entrar com Google
+            </button>
+        </div>
+    </div>
+
+    <div id="offline-status"><i class="fas fa-wifi-slash"></i> MODO OFFLINE ATIVO</div>
+
+    <div class="header">
+        <div class="logo-area">
+            <h1>DevocionalFlow</h1>
+            <span class="slogan">Um tempo a sós com Deus</span>
+            <div id="user-info" style="display:none; font-size: 0.7rem; font-weight: 800; margin-top: 5px; align-items: center; gap: 8px;">
+                <img id="user-photo" src="" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;" referrerpolicy="no-referrer">
+                <span id="user-name"></span>
+                <span onclick="logout()" style="color: #ef4444; cursor: pointer;">[Sair]</span>
+            </div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+    </div>
+
+    <div id="home" class="page active">
+        <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+            <div class="editor-block stat-card" onclick="showPage('history')">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="stat-total" class="stat-number">0</span>
+                <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.7;">REGISTROS</span>
+            </div>
+            <div class="editor-block stat-card" onclick="showPage('favorites')">
+                <i class="fas fa-heart"></i>
+                <span id="stat-favs" class="stat-number">0</span>
+                <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.7;">FAVORITOS</span>
+            </div>
+        </div>
+        <button class="btn-main" onclick="openCreator()">
+            <i class="fas fa-feather-pointed"></i> INICIAR DEVOCIONAL
+        </button>
+    </div>
+
+    <div id="editor" class="page">
+        <h2 style="font-weight: 800;">Criar Devocional</h2>
+        <input type="hidden" id="edit-id">
+        
+        <div class="editor-block">
+            <span class="section-label" style="margin-top:0"><i class="fas fa-tag"></i> Título do Devocional</span>
+            <input type="text" id="dev-title" placeholder="Ex: A Paz que excede entendimento">
+            
+            <span class="section-label"><i class="fas fa-calendar"></i> Data</span>
+            <input type="date" id="dev-date">
+
+            <span class="section-label"><i class="fas fa-hands-praying"></i> Oração Inicial</span>
+            <textarea id="dev-prayer-in" rows="3" placeholder="Agradeça e peça orientação ao Espírito Santo..."></textarea>
+
+            <span class="section-label"><i class="fas fa-bible"></i> Referência Bíblica</span>
+            <input type="text" id="dev-ref" placeholder="Ex: Filipenses 4:7">
+            
+            <span class="section-label"><i class="fas fa-quote-left"></i> Versículo Chave</span>
+            <input type="text" id="dev-key-verse" placeholder="Digite o texto principal lido...">
+        </div>
+
+        <span class="section-label"><i class="fas fa-lightbulb"></i> Meditação</span>
+        <div class="editor-block">
+            <textarea id="dev-meditation" rows="5" placeholder="O que Deus falou com você hoje?"></textarea>
+        </div>
+
+        <span class="section-label"><i class="fas fa-list-ul"></i> Tópicos da Meditação</span>
+        <div id="topics-container"></div>
+        <button class="btn-outline" onclick="addTopicRow()"><i class="fas fa-plus"></i> ADICIONAR TÓPICO</button>
+
+        <span class="section-label"><i class="fas fa-shoe-prints"></i> Aplicação Prática</span>
+        <div class="editor-block">
+            <textarea id="dev-application" rows="3" placeholder="Como você vai aplicar isso hoje?"></textarea>
+        </div>
+
+        <span class="section-label"><i class="fas fa-music"></i> Louvor Do Dia</span>
+        <div class="editor-block">
+            <textarea id="dev-praise" rows="2" placeholder="Qual música marcou hoje?"></textarea>
+        </div>
+
+        <span class="section-label"><i class="fas fa-heart"></i> Oração Final</span>
+        <div class="editor-block">
+            <textarea id="dev-prayer-out" rows="3" placeholder="Pedidos de oração e gratidão final..."></textarea>
+        </div>
+
+        <span class="section-label"><i class="fas fa-list-check"></i> Check list</span>
+        <div class="editor-block">
+            <div class="checklist-container">
+                <label class="checklist-item"><input type="checkbox" id="chk-ora-in"> <span><i class="fas fa-hands-praying"></i> Oração inicial</span></label>
+                <label class="checklist-item"><input type="checkbox" id="chk-leitura"> <span><i class="fas fa-bible"></i> Leitura</span></label>
+                <label class="checklist-item"><input type="checkbox" id="chk-meditacao"> <span><i class="fas fa-lightbulb"></i> Meditação</span></label>
+                <label class="checklist-item"><input type="checkbox" id="chk-louvor"> <span><i class="fas fa-music"></i> Louvor</span></label>
+                <label class="checklist-item"><input type="checkbox" id="chk-ora-out"> <span><i class="fas fa-heart"></i> Oração final</span></label>
+            </div>
+        </div>
+
+        <button class="btn-main" onclick="saveDevotional()"><i class="fas fa-save"></i> SALVAR DEVOCIONAL</button>
+        <div style="height: 40px;"></div>
+    </div>
+
+    <div id="history" class="page">
+        <h2 style="font-weight: 800; margin-bottom: 10px;">Diário Devocional</h2>
+        <div class="search-container">
+            <div class="search-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Pesquisar título ou referência..." oninput="renderList('list-history', false)">
+            </div>
+        </div>
+        <div id="list-history"></div>
+    </div>
+
+    <div id="favorites" class="page">
+        <h2 style="font-weight: 800;">Favoritos</h2>
+        <div id="list-favs"></div>
+    </div>
+
+    <div id="reader" onclick="handleReaderInteraction()">
+        <div id="reader-back" class="reader-back-btn" onclick="closeReader(event)">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+        <div id="read-content" class="reader-content"></div>
+    </div>
+
+    <nav class="navbar">
+        <button class="nav-item active" id="n-home" onclick="showPage('home')"><i class="fas fa-house"></i><span>Home</span></button>
+        <button class="nav-item" id="n-editor" onclick="openCreator()"><i class="fas fa-plus-circle"></i><span>Novo</span></button>
+        <button class="nav-item" id="n-history" onclick="showPage('history')"><i class="fas fa-scroll"></i><span>Diário</span></button>
+        <button class="nav-item" id="n-favorites" onclick="showPage('favorites')"><i class="fas fa-heart"></i><span>Favs</span></button>
+    </nav>
+
+    <div id="alert-modal" class="custom-alert" onclick="closeAlert()">
+        <div class="alert-box" onclick="event.stopPropagation()">
+            <i class="fas fa-circle-exclamation"></i>
+            <h3 id="alert-title">Atenção</h3>
+            <p id="alert-msg">Por favor, preencha todos os campos obrigatórios.</p>
+            <button class="btn-main" onclick="closeAlert()">OK</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // CONFIGURAÇÃO DO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvXh2-pRYSMEbIUSgeiqOXfVMPKBTDao4",
+            authDomain: "devocionalflow.firebaseapp.com",
+            projectId: "devocionalflow",
+            storageBucket: "devocionalflow.firebasestorage.app",
+            messagingSenderId: "661860465999",
+            appId: "1:661860465999:web:65202c3b255fe92063593a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ATIVAR PERSISTÊNCIA OFFLINE
+        db.enablePersistence().catch(err => console.log("Erro offline:", err.code));
+
+        let devotionals = [];
+        let currentUser = null;
+        let wakeLock = null;
+        let readerTimeout = null;
+
+        // CONTROLE DE LOGIN
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('user-info').style.display = 'flex';
+                
+                // Correção da Imagem de Perfil
+                const photo = user.photoURL ? user.photoURL : "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName);
+                document.getElementById('user-photo').src = photo;
+                
+                document.getElementById('user-name').innerText = user.displayName;
+                startListening();
+            } else {
+                currentUser = null;
+                document.getElementById('login-page').style.display = 'flex';
+                document.getElementById('user-info').style.display = 'none';
+            }
+        });
+
+        function loginGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+        }
+
+        function logout() { auth.signOut(); }
+
+        // SINCRONIZAÇÃO COM FIRESTORE
+        function startListening() {
+            db.collection("users").doc(currentUser.uid).collection("devocionais")
+              .orderBy("id", "desc")
+              .onSnapshot(snapshot => {
+                  devotionals = snapshot.docs.map(doc => ({ firebaseId: doc.id, ...doc.data() }));
+                  updateStats();
+                  renderList('list-history', false);
+                  renderList('list-favs', true);
+              });
+        }
+
+        // SERVICE WORKER OFFLINE
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                var swCode = "const CACHE='devflow-v3'; const ASSETS=['/', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css']; self.addEventListener('install', e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))); self.addEventListener('fetch', e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));";
+                var blob = new Blob([swCode], {type: 'text/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(e => console.error(e));
+            });
+        }
+
+        window.onload = () => {
+            initTheme();
+            updateStats();
+        };
+
+        function showAlert(title, msg) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-msg').innerText = msg;
+            document.getElementById('alert-modal').classList.add('active');
+        }
+
+        function closeAlert() { document.getElementById('alert-modal').classList.remove('active'); }
+
+        async function requestWakeLock() {
+            try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {}
+        }
+
+        function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
+
+        function resetReaderTimer() {
+            const btn = document.getElementById('reader-back');
+            btn.classList.remove('hidden');
+            if (readerTimeout) clearTimeout(readerTimeout);
+            readerTimeout = setTimeout(() => btn.classList.add('hidden'), 3000);
+        }
+
+        function handleReaderInteraction() { resetReaderTimer(); }
+
+        function initTheme() {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', saved);
+            document.getElementById('theme-icon').className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function toggleTheme() {
+            const current = document.body.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', target);
+            document.getElementById('theme-icon').className = target === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('theme', target);
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(ni => ni.classList.remove('active'));
+            document.getElementById(p).classList.add('active');
+            if(document.getElementById('n-' + p)) document.getElementById('n-' + p).classList.add('active');
+            
+            if(p === 'history') {
+                document.getElementById('search-input').value = '';
+                renderList('list-history', false);
+            }
+            if(p === 'favorites') renderList('list-favs', true);
+            updateStats();
+        }
+
+        function openCreator() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('topics-container').innerHTML = '';
+            document.querySelectorAll('#editor input, #editor textarea').forEach(i => {
+                if(i.type === 'checkbox') i.checked = false;
+                else if(i.type === 'date') i.value = new Date().toISOString().split('T')[0];
+                else i.value = '';
+            });
+            showPage('editor');
+        }
+
+        function addTopicRow(title = '', text = '', subtopics = []) {
+            const container = document.getElementById('topics-container');
+            const rowCount = container.querySelectorAll('.topic-item').length + 1;
+            const row = document.createElement('div');
+            row.className = 'topic-item';
+            row.innerHTML = `
+                <button class="btn-remove-topic" onclick="this.parentElement.remove(); updateTopicNumbers();"><i class="fas fa-times"></i></button>
+                <span class="topic-number-badge">Tópico ${rowCount}</span>
+                <input type="text" class="topic-title" placeholder="Título do Tópico" value="${title}" style="font-weight:700; margin-bottom:8px">
+                <textarea class="topic-text" rows="2" placeholder="O que aprendeu neste ponto?">${text}</textarea>
+                <div class="subtopic-container">
+                    <div class="subtopic-list"></div>
+                    <button class="btn-add-sub" onclick="addSubtopicRow(this.previousElementSibling)"><i class="fas fa-plus"></i> Sub-tópico</button>
+                </div>
+            `;
+            container.appendChild(row);
+            if(subtopics && subtopics.length > 0) {
+                const list = row.querySelector('.subtopic-list');
+                subtopics.forEach(st => addSubtopicRow(list, st));
+            }
+        }
+
+        function updateTopicNumbers() {
+            const topics = document.querySelectorAll('.topic-item');
+            topics.forEach((t, i) => t.querySelector('.topic-number-badge').innerText = "Tópico " + (i+1));
+        }
+
+        function addSubtopicRow(container, val = '') {
+            const sub = document.createElement('div');
+            sub.className = 'subtopic-item';
+            sub.innerHTML = `
+                <input type="text" class="subtopic-input" placeholder="Sub-tópico..." value="${val}" style="padding:8px; font-size:0.85rem">
+                <button class="btn-remove-subtopic" onclick="this.parentElement.remove()"><i class="fas fa-minus"></i></button>
+            `;
+            container.appendChild(sub);
+        }
+
+        async function saveDevotional() {
+            if(!currentUser) return;
+            const titleInput = document.getElementById('dev-title');
+            const title = titleInput.value.trim();
+            const editId = document.getElementById('edit-id').value;
+
+            if(!title) {
+                showAlert("Campo Obrigatório", "Por favor, dê um título ao seu devocional.");
+                titleInput.focus();
+                return;
+            }
+
+            const topics = [];
+            document.querySelectorAll('.topic-item').forEach(item => {
+                const subs = [];
+                item.querySelectorAll('.subtopic-input').forEach(si => { if(si.value) subs.push(si.value); });
+                topics.push({
+                    title: item.querySelector('.topic-title').value,
+                    text: item.querySelector('.topic-text').value,
+                    subtopics: subs
+                });
+            });
+
+            const data = {
+                id: editId ? Number(editId) : Date.now(),
+                date: document.getElementById('dev-date').value,
+                title: title,
+                ref: document.getElementById('dev-ref').value,
+                keyVerse: document.getElementById('dev-key-verse').value,
+                prayerIn: document.getElementById('dev-prayer-in').value,
+                meditation: document.getElementById('dev-meditation').value,
+                topicList: topics,
+                application: document.getElementById('dev-application').value,
+                praise: document.getElementById('dev-praise').value,
+                prayerOut: document.getElementById('dev-prayer-out').value,
+                checklist: {
+                    chkOraIn: document.getElementById('chk-ora-in').checked,
+                    chkLeitura: document.getElementById('chk-leitura').checked,
+                    chkMeditacao: document.getElementById('chk-meditacao').checked,
+                    chkLouvor: document.getElementById('chk-louvor').checked,
+                    chkOraOut: document.getElementById('chk-ora-out').checked
+                }
+            };
+
+            const userRef = db.collection("users").doc(currentUser.uid).collection("devocionais");
+            
+            try {
+                if(editId) {
+                    const doc = devotionals.find(d => d.id === Number(editId));
+                    await userRef.doc(doc.firebaseId).update(data);
+                } else {
+                    data.fav = false;
+                    await userRef.add(data);
+                }
+                showPage('history');
+            } catch (e) { showAlert("Erro", "Falha ao salvar. Verifique sua conexão."); }
+        }
+
+        function renderList(containerId, favOnly) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            let list = favOnly ? devotionals.filter(d => d.fav) : devotionals;
+            
+            if(!favOnly) {
+                const term = document.getElementById('search-input').value.toLowerCase();
+                if(term) list = list.filter(d => d.title.toLowerCase().includes(term) || (d.ref && d.ref.toLowerCase().includes(term)));
+            }
+
+            if(list.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-scroll" style="font-size:3rem; opacity:0.1"></i><p>Nenhum registro.</p></div>';
+                return;
+            }
+
+            list.forEach(d => {
+                const card = document.createElement('div');
+                card.className = 'editor-block';
+                card.style.cursor = 'pointer';
+                card.onclick = () => openReader(d.id);
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                        <small style="color:var(--accent); font-weight:800">${d.date}</small>
+                        ${d.ref ? `<small style="color:var(--text-dim); font-weight:600; font-size:0.7rem">${d.ref}</small>` : ''}
+                    </div>
+                    <h3 style="margin:5px 0">${d.title}</h3>
+                    <div style="display:flex; gap:15px; margin-top:10px; color:var(--text-dim)">
+                        <i class="fas fa-edit" onclick="event.stopPropagation(); editDevotional(${d.id})"></i>
+                        <i class="fas fa-heart ${d.fav ? 'fa-solid' : 'fa-regular'}" style="${d.fav ? 'color:#ef4444' : ''}" onclick="event.stopPropagation(); toggleFav(${d.id})"></i>
+                        <i class="fas fa-trash" onclick="event.stopPropagation(); deleteDevotional(${d.id})"></i>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function editDevotional(id) {
+            const d = devotionals.find(i => i.id === id);
+            if(!d) return;
+            openCreator();
+            document.getElementById('edit-id').value = d.id;
+            document.getElementById('dev-title').value = d.title;
+            document.getElementById('dev-date').value = d.date;
+            document.getElementById('dev-ref').value = d.ref;
+            document.getElementById('dev-key-verse').value = d.keyVerse;
+            document.getElementById('dev-prayer-in').value = d.prayerIn;
+            document.getElementById('dev-meditation').value = d.meditation;
+            document.getElementById('dev-application').value = d.application;
+            document.getElementById('dev-praise').value = d.praise;
+            document.getElementById('dev-prayer-out').value = d.prayerOut;
+            if(d.topicList) d.topicList.forEach(t => addTopicRow(t.title, t.text, t.subtopics));
+            if(d.checklist) {
+                document.getElementById('chk-ora-in').checked = d.checklist.chkOraIn;
+                document.getElementById('chk-leitura').checked = d.checklist.chkLeitura;
+                document.getElementById('chk-meditacao').checked = d.checklist.chkMeditacao;
+                document.getElementById('chk-louvor').checked = d.checklist.chkLouvor;
+                document.getElementById('chk-ora-out').checked = d.checklist.chkOraOut;
+            }
+            showPage('editor');
+        }
+
+        async function toggleFav(id) {
+            const d = devotionals.find(item => item.id === id);
+            await db.collection("users").doc(currentUser.uid).collection("devocionais").doc(d.firebaseId).update({ fav: !d.fav });
+        }
+
+        async function deleteDevotional(id) {
+            if(confirm("Deseja apagar este devocional?")) {
+                const d = devotionals.find(item => item.id === id);
+                await db.collection("users").doc(currentUser.uid).collection("devocionais").doc(d.firebaseId).delete();
+            }
+        }
+
+        function openReader(id) {
+            const d = devotionals.find(item => item.id === id);
+            if(!d) return;
+            let topicsHtml = '';
+            if(d.topicList) {
+                d.topicList.forEach((t, i) => {
+                    let subs = (t.subtopics && t.subtopics.length > 0) ? '<ul>' + t.subtopics.map(s => '<li>' + s + '</li>').join('') + '</ul>' : '';
+                    topicsHtml += `<div style="margin-bottom:20px"><h4 style="color:var(--accent)">${i+1}. ${t.title}</h4><p>${t.text}</p>${subs}</div>`;
+                });
+            }
+            document.getElementById('read-content').innerHTML = `<h1>${d.title}</h1><p><b>Referência:</b> ${d.ref}</p><p>${d.meditation}</p>${topicsHtml}`;
+            document.getElementById('reader').classList.add('active');
+            requestWakeLock();
+            resetReaderTimer();
+        }
+
+        function closeReader(e) { if(e) e.stopPropagation(); document.getElementById('reader').classList.remove('active'); releaseWakeLock(); }
+
+        function updateStats() {
+            document.getElementById('stat-total').innerText = devotionals.length;
+            document.getElementById('stat-favs').innerText = devotionals.filter(d => d.fav).length;
+        }
+
+        window.addEventListener('online', () => document.getElementById('offline-status').style.display = 'none');
+        window.addEventListener('offline', () => document.getElementById('offline-status').style.display = 'block');
+    </script>
+</body>
+</html>
